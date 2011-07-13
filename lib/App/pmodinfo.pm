@@ -16,6 +16,7 @@ sub new {
     bless {
         author => undef,
         full   => undef,
+        hash   => undef,
         @_
     }, $class;
 }
@@ -26,7 +27,8 @@ sub parse_options {
     Getopt::Long::Configure("bundling");
     Getopt::Long::GetOptions(
         'v|version!' => sub { $self->show_version },
-        'f|full!'    => sub { $self->{full} = 1 }
+        'f|full!'    => sub { $self->{full} = 1 },
+        'h|hash!'    => sub { $self->{hash} = 1 },
     );
 
     $self->{argv} = \@ARGV;
@@ -55,6 +57,7 @@ Usage: pmodinfo Module [...]
 Options:
     -f,--full
     -v,--version
+    -h,--hash
 HELP
 
     return 1;
@@ -78,28 +81,47 @@ sub run {
 
     $self->show_help unless @{ $self->{argv} };
 
+    print "{\n" if $self->{hash};
+
     for my $module ( @{ $self->{argv} } ) {
-        my ( $install, $meta, $deprecated ) = $self->check_module( $module, 0 );
+        $self->{hash}
+            ? $self->show_modules_hash($module)
+            : $self->show_modules($module);
 
-        print "$module not found" and next unless $install;
-
-        print "$module is installed with version " . $meta->version || undef;
-        print "(deprecated)" if defined($deprecated);
-        print ".\n";
-
-        my $stat  = stat $meta->filename;
-        my $ctime = $self->format_date( $stat->[10] );
-        $self->print_block( 'filename   ', $meta->filename, $self->{full} );
-        $self->print_block( '  ctime    ', $ctime,          $self->{full} );
-        $self->print_block(
-            'POD content',
-            (   $meta->contains_pod
-                ? 'yes'
-                : 'no'
-            ),
-            $self->{full}
-        );
     }
+
+    print "};\n" if $self->{hash};
+}
+
+sub show_modules_hash {
+    my ( $self, $module ) = @_;
+    my ( $install, $meta ) = $self->check_module( $module, 0 );
+    my $version = $meta->version;
+    print "\t'$module' => $version,\n" if $install;
+}
+
+sub show_modules {
+    my ( $self, $module ) = @_;
+    my ( $install, $meta, $deprecated ) = $self->check_module( $module, 0 );
+
+    print "$module not found" and next unless $install;
+
+    print "$module is installed with version " . $meta->version || undef;
+    print "(deprecated)" if defined($deprecated);
+    print ".\n";
+
+    my $stat  = stat $meta->filename;
+    my $ctime = $self->format_date( $stat->[10] );
+    $self->print_block( 'filename   ', $meta->filename, $self->{full} );
+    $self->print_block( '  ctime    ', $ctime,          $self->{full} );
+    $self->print_block(
+        'POD content',
+        (   $meta->contains_pod
+            ? 'yes'
+            : 'no'
+        ),
+        $self->{full}
+    );
 }
 
 # check_module from cpanminus.
@@ -200,7 +222,6 @@ __END__
 
 =head1 DESCRIPTION
 
-
     pmodinfo extracts information from the perl modules given the command
     line.
 
@@ -210,7 +231,14 @@ __END__
 
     -f --full
 
+    -h --hash
+
 =head1 SEE ALSO
 
 L<Module::Metadata>, L<Getopt::Long>
+
+=head1 ACKNOWLEDGE
+
+L<cpanminus>, for the check_module function. :-)
+
 
