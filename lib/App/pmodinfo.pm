@@ -6,6 +6,7 @@ use warnings;
 use Getopt::Long ();
 use File::stat;
 use DateTime;
+use Config;
 
 # VERSION
 
@@ -13,10 +14,8 @@ sub new {
     my $class = shift;
 
     bless {
-        author   => undef,
-        full     => undef,
-        filename => 0,
-        pod      => 0,
+        author => undef,
+        full   => undef,
         @_
     }, $class;
 }
@@ -26,14 +25,17 @@ sub parse_options {
 
     Getopt::Long::Configure("bundling");
     Getopt::Long::GetOptions(
-        'a|author!'   => sub { $self->{author}   = 1 },
-        'f|filename!' => sub { $self->{filename} = 1 },
-        'p|pod!'      => sub { $self->{pod}      = 1 },
-        'f|full!' =>
-          sub { $self->{author} = $self->{filename} = $self->{pod} = 1 },
+        'v|version!' => sub { $self->show_version },
+        'f|full!'    => sub { $self->{full} = 1 }
     );
 
     $self->{argv} = \@ARGV;
+}
+
+sub show_version {
+    my $self = shift;
+    print "pmodinfo version VERSION\n";
+    exit 1;
 }
 
 sub show_help {
@@ -51,10 +53,8 @@ USAGE
 Usage: pmodinfo Module [...]
 
 Options:
-    -a,--author
-    -f,--filename
-    -p,--pod
     -f,--full
+    -v,--version
 HELP
 
     return 1;
@@ -87,12 +87,18 @@ sub run {
         print "(deprecated)" if defined($deprecated);
         print ".\n";
 
-        my $ctime = $self->format_date( ( stat $meta->filename )[10] );
-        $self->print_block( 'filename   ', $meta->filename, $self->{filename} );
-        $self->print_block( '  ctime    ', $ctime,          $self->{filename} );
-        $self->print_block( 'POD content',
-            ( $meta->contains_pod ? 'yes' : 'no' ),
-            $self->{pod} );
+        my $stat  = stat $meta->filename;
+        my $ctime = $self->format_date( $stat->[10] );
+        $self->print_block( 'filename   ', $meta->filename, $self->{full} );
+        $self->print_block( '  ctime    ', $ctime,          $self->{full} );
+        $self->print_block(
+            'POD content',
+            (   $meta->contains_pod
+                ? 'yes'
+                : 'no'
+            ),
+            $self->{full}
+        );
     }
 }
 
@@ -105,8 +111,8 @@ sub check_module {
         local ${"$mod\::VERSION"};
         require Module::Metadata;
         Module::Metadata->new_from_module( $mod, inc => $self->{search_inc} );
-      }
-      or return 0, undef;
+        }
+        or return 0, undef;
 
     my $version = $meta->version;
 
@@ -125,10 +131,9 @@ sub check_module {
         # not in the core, and install to the new local library path.
         # Core version 0.38 means >= perl 5.14 and all deps are satisfied
         if ( $mod eq 'Module::Build' ) {
-            if (
-                $version < 0.36 or    # too old anyway
+            if ($version < 0.36 or    # too old anyway
                 ( $core_version != $version and $core_version < 0.38 )
-              )
+                )
             {
                 return 0, undef;
             }
@@ -162,7 +167,50 @@ sub is_deprecated {
     return $self->loaded_from_perl_lib($meta);
 }
 
+sub loaded_from_perl_lib {
+    my ( $self, $meta ) = @_;
+
+    require Config;
+    for my $dir (qw(archlibexp privlibexp)) {
+        my $confdir = $Config{$dir};
+        if ( $confdir eq substr( $meta->filename, 0, length($confdir) ) ) {
+            return 1;
+        }
+    }
+
+    return;
+}
+
 1;
 __END__
 
 # ABSTRACT: Perl module info command line.
+
+=head1 SYNOPSIS
+
+    $ pmodinfo Scalar::Util strict
+    Scalar::Util is installed with version 1.23.
+    strict is installed with version 1.04.
+
+    $ pmodinfo --full Redis::Dump
+    Redis::Dump is installed with version 0.013.
+    filename   : /Users/thiago/perl5/perlbrew/perls/perl-5.14.0/lib/site_perl/5.14.0/Redis/Dump.pm
+      ctime    : 2011-07-05 19:56:54
+    POD content: yes
+
+=head1 DESCRIPTION
+
+
+    pmodinfo extracts information from the perl modules given the command
+    line.
+
+=head1 OPTIONS
+
+    -v --version
+
+    -f --full
+
+=head1 SEE ALSO
+
+L<Module::Metadata>, L<Getopt::Long>
+
