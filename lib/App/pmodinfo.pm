@@ -225,6 +225,8 @@ __END__
     pmodinfo extracts information from the perl modules given the command
     line.
 
+    I don't want to use more "perl -MModule\ 999".
+
 =head1 OPTIONS
 
     -v --version
