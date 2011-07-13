@@ -1,0 +1,12 @@
+
+use strict;
+use FindBin qw($Bin);
+use lib "$Bin/../lib", "$Bin/lib";
+use App::pmodinfo;
+
+unless (caller) {
+    my $app = App::pmodinfo->new;
+    $app->parse_options(@ARGV);
+    $app->run or exit(1);
+}
+
