@@ -1,12 +1,21 @@
+#!/usr/bin/env perl
+
+package pmodinfo;
 
 use strict;
 use FindBin qw($Bin);
 use lib "$Bin/../lib", "$Bin/lib";
 use App::pmodinfo;
 
+# VERSION
+
 unless (caller) {
     my $app = App::pmodinfo->new;
     $app->parse_options(@ARGV);
     $app->run or exit(1);
 }
+
+__END__
+
+# Abstract: Perl module info command line
 

@@ -7,7 +7,7 @@ use Getopt::Long ();
 use File::stat;
 use DateTime;
 
-our $VERSION = '0.01';
+# VERSION
 
 sub new {
     my $class = shift;
@@ -68,6 +68,7 @@ sub print_block {
 
 sub format_date {
     my ( $self, $epoch ) = @_;
+    return '' unless $epoch;
     my $dt = DateTime->from_epoch( epoch => $epoch );
     return join( ' ', $dt->ymd, $dt->hms );
 }
@@ -162,4 +163,6 @@ sub is_deprecated {
 }
 
 1;
+__END__
 
+# ABSTRACT: Perl module info command line.
