@@ -135,8 +135,10 @@ sub show_modules {
         $self->{full}
     );
 
-    my $cpan_version = $self->get_last_version_from_cpan($module);
-    $self->print_block( 'Last cpan version', $cpan_version, $self->{full}, $self->{cpan} );
+    if ( $self->{full} or $self->{cpan} ) {
+        my $cpan_version = $self->get_last_version_from_cpan($module);
+        $self->print_block( 'Last cpan version', $cpan_version, 1 );
+    }
 }
 
 sub parse_meta_string {
