@@ -7,6 +7,8 @@ use Getopt::Long ();
 use File::stat;
 use DateTime;
 use Config;
+use Parse::CPAN::Meta;
+use LWP::Simple;
 
 # VERSION
 
@@ -29,6 +31,7 @@ sub parse_options {
         'v|version!' => sub { $self->show_version },
         'f|full!'    => sub { $self->{full} = 1 },
         'h|hash!'    => sub { $self->{hash} = 1 },
+        'c|cpan!'    => sub { $self->{cpan} = 1 },
     );
 
     $self->{argv} = \@ARGV;
@@ -56,6 +59,7 @@ USAGE
 Usage: pmodinfo Module [...]
 
 Options:
+    -c,--cpan
     -f,--full
     -v,--version
     -h,--hash
@@ -66,8 +70,8 @@ HELP
 
 sub print_block {
     my $self = shift;
-    my ( $description, $data, $check ) = @_;
-    print " $description: $data\n" if $check;
+    my ( $description, $data, @check ) = @_;
+    map { print "  $description: $data\n" if $_ } @check;
 }
 
 sub format_date {
@@ -107,7 +111,7 @@ sub show_modules {
 
     print "$module not found" and next unless $install;
 
-    print "$module is installed with version " . $meta->version || undef;
+    print "$module version is" . $meta->version || undef;
     print "(deprecated)" if defined($deprecated);
     print ".\n";
 
@@ -123,7 +127,25 @@ sub show_modules {
         ),
         $self->{full}
     );
+
+    my $cpan_version = $self->get_last_version_from_cpan($module);
+    $self->print_block( 'Last cpan version', $cpan_version, $self->{full},
+        $self->{cpan});
 }
+
+sub parse_meta_string {
+    my($self, $yaml) = @_;
+    return eval { (Parse::CPAN::Meta::Load($yaml))[0] } || undef;
+}
+
+sub get_last_version_from_cpan {
+    my ($self, $module) = @_;
+    $module =~ s/::/-/g;
+    my $meta_yml = get("http://search.cpan.org/meta/$module/META.yml");
+    my $meta = $self->parse_meta_string($meta_yml);
+    return $meta->{version};
+}
+
 
 # check_module from cpanminus.
 sub check_module {
@@ -212,7 +234,7 @@ __END__
 =head1 SYNOPSIS
 
     $ pmodinfo Scalar::Util strict
-    Scalar::Util is installed with version 1.23.
+    Scalar::Util version is 1.23.
     strict is installed with version 1.04.
 
     $ pmodinfo --full Redis::Dump
@@ -220,6 +242,7 @@ __END__
     filename   : /Users/thiago/perl5/perlbrew/perls/perl-5.14.0/lib/site_perl/5.14.0/Redis/Dump.pm
       ctime    : 2011-07-05 19:56:54
     POD content: yes
+    Last cpan version: 0.013
 
     $ pmodinfo --hash Catalyst::Runtime DBIx::Class Data::Printer
     {
