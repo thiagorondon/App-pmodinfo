@@ -222,10 +222,10 @@ __END__
 
 =head1 DESCRIPTION
 
-    pmodinfo extracts information from the perl modules given the command
-    line.
+pmodinfo extracts information from the perl modules given the command
+line.
 
-    I don't want to use more "perl -MModule\ 999".
+I don't want to use more "perl -MModule\ 999".
 
 =head1 OPTIONS
 
