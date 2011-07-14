@@ -36,7 +36,8 @@ sub parse_options {
 
 sub show_version {
     my $self = shift;
-    print "pmodinfo version VERSION\n";
+    no strict; # Dist::Zilla, VERSION.
+    print "pmodinfo version $VERSION\n";
     exit 1;
 }
 
@@ -219,6 +220,13 @@ __END__
     filename   : /Users/thiago/perl5/perlbrew/perls/perl-5.14.0/lib/site_perl/5.14.0/Redis/Dump.pm
       ctime    : 2011-07-05 19:56:54
     POD content: yes
+
+    $ pmodinfo --hash Catalyst::Runtime DBIx::Class Data::Printer
+    {
+        'Catalyst::Runtime' => 5.80032,
+        'DBIx::Class' => 0.08192,
+        'Data::Printer' => 0.21,
+    };
 
 =head1 DESCRIPTION
 
