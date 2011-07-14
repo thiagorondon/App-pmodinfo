@@ -111,7 +111,7 @@ sub show_modules {
 
     print "$module not found" and next unless $install;
 
-    print "$module version is" . $meta->version || undef;
+    print "$module version is " . $meta->version || undef;
     print "(deprecated)" if defined($deprecated);
     print ".\n";
 
