@@ -244,6 +244,7 @@ __END__
 
     $ pmodinfo --full Redis::Dump
     Redis::Dump is installed with version 0.013.
+    cpan page  : http://search.cpan.org/dist/Redis-Dump
     filename   : /Users/thiago/perl5/perlbrew/perls/perl-5.14.0/lib/site_perl/5.14.0/Redis/Dump.pm
       ctime    : 2011-07-05 19:56:54
     POD content: yes

@@ -19,3 +19,9 @@ __END__
 
 # Abstract: Perl module info command line
 
+=head1 DESCRIPTION
+
+See L<App::pmodinfo> for more information
+
+=cut
+
