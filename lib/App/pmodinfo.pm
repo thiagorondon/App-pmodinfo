@@ -9,6 +9,7 @@ use DateTime;
 use Config;
 use Parse::CPAN::Meta;
 use LWP::Simple;
+use ExtUtils::Installed;
 
 # VERSION
 
@@ -28,10 +29,12 @@ sub parse_options {
 
     Getopt::Long::Configure("bundling");
     Getopt::Long::GetOptions(
-        'v|version!' => sub { $self->show_version },
-        'f|full!'    => sub { $self->{full} = 1 },
-        'h|hash!'    => sub { $self->{hash} = 1 },
-        'c|cpan!'    => sub { $self->{cpan} = 1 },
+        'v|version!'      => sub { $self->show_version },
+        'f|full!'         => sub { $self->{full} = 1 },
+        'h|hash!'         => sub { $self->{hash} = 1 },
+        'c|cpan!'         => sub { $self->{cpan} = 1 },
+        'a|all!'          => sub { $self->show_installed_modules },
+        'u|check-updates' => sub { $self->check_installed_modules_for_update },
     );
 
     $self->{argv} = \@ARGV;
@@ -109,6 +112,43 @@ sub cpanpage {
     my ( $self, $module ) = @_;
     $module =~ s/::/-/g;
     return "http://search.cpan.org/dist/$module";
+}
+
+sub check_installed_modules_for_update {
+    my $self = shift;
+    my @need_update;
+
+    foreach my $module ( $self->installed_modules ) {
+        my ( $install, $meta, $deprecated ) = $self->check_module( $module, 0 );
+        next unless defined($meta);
+
+        my $local_version = $meta->version;
+        my $cpan_version  = $self->get_last_version_from_cpan($module);
+        next unless $cpan_version and $local_version;
+        next if $cpan_version eq $local_version;
+
+        print "$module local version: $local_version, last version in cpan: $cpan_version\n";
+
+        push( @need_update, $module );
+    }
+    exit 1;
+}
+
+sub show_installed_modules {
+    my $self = shift;
+
+    foreach my $module ( $self->installed_modules ) {
+        my ( $install, $meta, $deprecated ) = $self->check_module( $module, 0 );
+        print "$module version is " . $meta->version . ".\n" if defined($meta);
+    }
+    exit 1;
+}
+
+sub installed_modules {
+    my $self    = shift;
+    my $inst    = ExtUtils::Installed->new();
+    my @modules = $inst->modules();
+    return @modules;
 }
 
 sub show_modules {
