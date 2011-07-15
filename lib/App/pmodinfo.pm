@@ -10,6 +10,7 @@ use Config;
 use Parse::CPAN::Meta;
 use LWP::Simple;
 use ExtUtils::Installed;
+use File::Which qw(which);
 
 # VERSION
 
@@ -27,17 +28,18 @@ sub new {
 sub parse_options {
     my $self = shift;
 
+    $self->{argv} = \@ARGV;
+
     Getopt::Long::Configure("bundling");
     Getopt::Long::GetOptions(
-        'v|version!'      => sub { $self->show_version },
-        'f|full!'         => sub { $self->{full} = 1 },
-        'h|hash!'         => sub { $self->{hash} = 1 },
-        'c|cpan!'         => sub { $self->{cpan} = 1 },
-        'a|all!'          => sub { $self->show_installed_modules },
-        'u|check-updates' => sub { $self->check_installed_modules_for_update },
+        'v|version!'       => sub { $self->show_version },
+        'f|full!'          => sub { $self->{full} = 1 },
+        'h|hash!'          => sub { $self->{hash} = 1 },
+        'c|cpan!'          => sub { $self->{cpan} = 1 },
+        'l|local-modules!' => sub { $self->show_installed_modules },
+        'u|check-updates'  => sub { $self->check_installed_modules_for_update },
     );
 
-    $self->{argv} = \@ARGV;
 }
 
 sub show_version {
@@ -66,6 +68,8 @@ Options:
     -f,--full
     -v,--version
     -h,--hash
+    -l,--local-modules
+    -u,--check-updates
 HELP
 
     return 1;
@@ -95,7 +99,6 @@ sub run {
         $self->{hash}
             ? $self->show_modules_hash($module)
             : $self->show_modules($module);
-
     }
 
     print "};\n" if $self->{hash};
@@ -114,13 +117,20 @@ sub cpanpage {
     return "http://search.cpan.org/dist/$module";
 }
 
+sub update_modules {
+    my ( $self, @modules ) = @_;
+    my $cpan_util;
+    $cpan_util = which('cpanm') or which('cpan') or exit -1;
+    system( $cpan_util, @modules );
+}
+
 sub check_installed_modules_for_update {
     my $self = shift;
     my @need_update;
 
-    foreach my $module ( $self->installed_modules ) {
-        my ( $install, $meta, $deprecated ) = $self->check_module( $module, 0 );
-        next unless defined($meta);
+    foreach my $module ( scalar( @{ $self->{argv} } ) ? @{ $self->{argv} } : $self->installed_modules ) {
+        my ( $install, $meta ) = $self->check_module( $module, 0 );
+        next unless $install and defined($meta);
 
         my $local_version = $meta->version;
         my $cpan_version  = $self->get_last_version_from_cpan($module);
@@ -131,7 +141,49 @@ sub check_installed_modules_for_update {
 
         push( @need_update, $module );
     }
+
+    if ( scalar(@need_update) ) {
+        my $ans = lc $self->prompt( "Do you need to update this modules now ? (y/n)", "n" );
+        $self->update_modules(@need_update) if $ans eq 'y';
+    }
+    else {
+        print "already up to date.";
+    }
+
     exit 1;
+}
+
+sub prompt {
+    my ( $self, $mess, $def ) = @_;
+
+    my $isa_tty = -t STDIN && ( -t STDOUT || !( -f STDOUT || -c STDOUT ) );
+    my $dispdef = defined $def ? "[$def] " : " ";
+    $def = defined $def ? $def : "";
+
+    if ( ( !$isa_tty && eof STDIN ) ) {
+        return $def;
+    }
+
+    local $| = 1;
+    local $\;
+    my $ans;
+    eval {
+        local $SIG{ALRM} = sub {
+            undef $ans;
+            die "alarm\n";
+        };
+        print STDOUT "$mess $dispdef";
+        $ans = <STDIN>;
+        alarm 0;
+    };
+    if ( defined $ans ) {
+        chomp $ans;
+    }
+    else {    # user hit ctrl-D or alarm timeout
+        print STDOUT "\n";
+    }
+
+    return ( !defined $ans || $ans eq '' ) ? $def : $ans;
 }
 
 sub show_installed_modules {
@@ -139,7 +191,10 @@ sub show_installed_modules {
 
     foreach my $module ( $self->installed_modules ) {
         my ( $install, $meta, $deprecated ) = $self->check_module( $module, 0 );
-        print "$module version is " . $meta->version . ".\n" if defined($meta);
+            next unless $install;
+            print "$module version is " . $meta->version || undef;
+            print "(deprecated)" if defined($deprecated);
+            print ".\n";
     }
     exit 1;
 }
@@ -299,6 +354,12 @@ __END__
         'Data::Printer' => 0.21,
     };
 
+    $ pmodinfo -u
+    Algorithm::Diff local version: 1.1902, last version in cpan: 1.15
+    Any::Moose local version: 0.14, last version in cpan: 0.15
+    (...)
+    Do you need to update this modules now ? (y/n) [n]
+
 =head1 DESCRIPTION
 
 pmodinfo extracts information from the perl modules given the command
@@ -314,12 +375,17 @@ I don't want to use more "perl -MModule\ 999".
 
     -h --hash
 
+    -l,--local-modules
+
+    -u,--check-updates
+
 =head1 SEE ALSO
 
 L<Module::Metadata>, L<Getopt::Long>
 
 =head1 ACKNOWLEDGE
 
-L<cpanminus>, for the check_module function. :-)
+L<cpanminus>, for the check_module, prompt function and inspiration. :-)
 
+=cut
 
