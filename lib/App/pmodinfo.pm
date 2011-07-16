@@ -46,7 +46,7 @@ sub show_version {
     my $self = shift;
     no strict;    # Dist::Zilla, VERSION.
     print "pmodinfo version $VERSION\n";
-    exit 1;
+    exit 0;
 }
 
 sub show_help {
@@ -122,6 +122,7 @@ sub update_modules {
     my $cpan_util;
     $cpan_util = which('cpanm') or which('cpan') or exit -1;
     system( $cpan_util, @modules );
+    exit 0;
 }
 
 sub check_installed_modules_for_update {
@@ -150,7 +151,7 @@ sub check_installed_modules_for_update {
         print "already up to date.";
     }
 
-    exit 1;
+    exit 0;
 }
 
 sub prompt {
@@ -196,7 +197,7 @@ sub show_installed_modules {
             print "(deprecated)" if defined($deprecated);
             print ".\n";
     }
-    exit 1;
+    exit 0;
 }
 
 sub installed_modules {
