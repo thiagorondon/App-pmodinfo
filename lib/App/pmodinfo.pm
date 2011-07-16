@@ -72,7 +72,7 @@ Usage: pmodinfo [options] [Module] [...]
 
 HELP
 
-    return 1;
+    exit 0;
 }
 
 sub print_block {

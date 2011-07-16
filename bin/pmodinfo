@@ -38,7 +38,7 @@ Usage: pmodinfo [options] [Module] [...]
     -u,--check-updates      Check updates, compare your local version to cpan.
     -c,--cpan               Show the last version of module in cpan.
 
-With check-updates option, we try to use L<cpanminus> or L<cpan> to update 
+With check-updates option, we try to use L<cpanminus> or L<cpan> to update
 modules.
 
 =head1 DESCRIPTION
