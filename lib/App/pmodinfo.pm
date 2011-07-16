@@ -133,8 +133,13 @@ sub ns_argv {
     my @installed = $self->installed_modules;
 
     foreach my $arg ( @{ $self->{argv} } ) {
-        next if $arg =~ /::$/;
-        push( @nargv, $arg );
+        if ($arg =~ /::$/) {
+            my $mod = $arg;
+            $mod =~ s/::$//;
+            push( @nargv, $mod);
+        } else {
+            push( @nargv, $arg );
+        }
     }
 
     foreach my $mod (@installed) {
@@ -219,8 +224,8 @@ sub show_installed_modules {
 
     foreach my $module ( scalar( @{ $self->{argv} } ) ? @{ $self->{argv} } : $self->installed_modules ) {
         my ( $install, $meta, $deprecated ) = $self->check_module( $module, 0 );
-        next unless $install;
-        print "$module version is " . $meta->version || undef;
+        next unless $install and $meta->version;
+        print "$module version is " . $meta->version;
         print "(deprecated)" if defined($deprecated);
         print ".\n";
     }
