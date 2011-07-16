@@ -109,6 +109,7 @@ sub run {
 sub show_modules_hash {
     my ( $self, $module ) = @_;
     my ( $install, $meta ) = $self->check_module( $module, 0 );
+    return unless $meta and $meta->version;
     my $version = $meta->version;
     print "\t'$module' => $version,\n" if $install;
 }
