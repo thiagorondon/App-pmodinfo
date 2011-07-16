@@ -364,27 +364,25 @@ __END__
 =head1 DESCRIPTION
 
 pmodinfo extracts information from the perl modules given the command
-line.
+line, usign L<Module::Metadata>, L<Module::CoreList>, L<Module::Build>,
+L<Parse::CPAN::Meta> and L<ExtUtils::Installed>.
 
 I don't want to use more "perl -MModule\ 999".
 
-=head1 OPTIONS
+See L<pmodinfo> for more information.
 
-Usage: pmodinfo [options] [Module] [...]
+=head1 DEVELOPMENT
 
-    -v --version            Display software version
-    -f --full               Turns on the most output
-    -h --hash               Show module and version in a hash.
-    -l,--local-modules      Display all local modules
-    -u,--check-updates      Check updates, compare your local version to cpan.
-    -c,--cpan               Show the last version of module in cpan.
+App::modinfo is a open source project for everyone to participate. The code
+repository is located on github. Feel free to send a bug report or a pull
+request.
 
-With check-updates option, we try to use L<cpanminus> or L<cpan> to update 
-modules.
+L<http://www.github.com/maluco/App-pmodinfo>
 
 =head1 SEE ALSO
 
-L<Module::Metadata>, L<Getopt::Long>
+L<Module::Metadata>, L<Module::CoreList>, L<Module::Build>,
+L<Parse::CPAN::Meta>, L<ExtUtils::Installed>.
 
 =head1 ACKNOWLEDGE
 
