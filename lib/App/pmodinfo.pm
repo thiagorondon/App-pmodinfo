@@ -18,9 +18,9 @@ sub new {
     my $class = shift;
 
     bless {
-        author => undef,
-        full   => undef,
-        hash   => undef,
+        author => 0,
+        full   => 0,
+        hash   => 0,
         @_
     }, $class;
 }
