@@ -61,15 +61,15 @@ USAGE
     }
 
     print <<HELP;
-Usage: pmodinfo Module [...]
+Usage: pmodinfo [options] [Module] [...]
 
-Options:
-    -c,--cpan
-    -f,--full
-    -v,--version
-    -h,--hash
-    -l,--local-modules
-    -u,--check-updates
+    -v --version            Display software version
+    -f --full               Turns on the most output
+    -h --hash               Show module and version in a hash.
+    -l,--local-modules      Display all local modules
+    -u,--check-updates      Check updates, compare your local version to cpan.
+    -c,--cpan               Show the last version of module in cpan.
+
 HELP
 
     return 1;
@@ -338,10 +338,10 @@ __END__
 
     $ pmodinfo Scalar::Util strict
     Scalar::Util version is 1.23.
-    strict is installed with version 1.04.
+    strict version is 1.04.
 
     $ pmodinfo --full Redis::Dump
-    Redis::Dump is installed with version 0.013.
+    Redis::Dump version is 0.013.
     cpan page  : http://search.cpan.org/dist/Redis-Dump
     filename   : /Users/thiago/perl5/perlbrew/perls/perl-5.14.0/lib/site_perl/5.14.0/Redis/Dump.pm
       ctime    : 2011-07-05 19:56:54
@@ -370,15 +370,17 @@ I don't want to use more "perl -MModule\ 999".
 
 =head1 OPTIONS
 
-    -v --version
+Usage: pmodinfo [options] [Module] [...]
 
-    -f --full
+    -v --version            Display software version
+    -f --full               Turns on the most output
+    -h --hash               Show module and version in a hash.
+    -l,--local-modules      Display all local modules
+    -u,--check-updates      Check updates, compare your local version to cpan.
+    -c,--cpan               Show the last version of module in cpan.
 
-    -h --hash
-
-    -l,--local-modules
-
-    -u,--check-updates
+With check-updates option, we try to use L<cpanminus> or L<cpan> to update 
+modules.
 
 =head1 SEE ALSO
 
