@@ -175,7 +175,7 @@ sub check_installed_modules_for_update {
     }
 
     if ( scalar(@need_update) ) {
-        my $ans = lc $self->prompt( "Do you need to update this modules now ? (y/n)", "n" );
+        my $ans = lc $self->prompt( "Do you want to update this modules now ? (y/n)", "n" );
         $self->update_modules(@need_update) if $ans eq 'y';
     }
     else {
